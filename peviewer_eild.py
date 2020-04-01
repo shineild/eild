@@ -74,14 +74,30 @@ Signature 뒤에는 FileHeader와 OptionalHeader 구조체가 존재한다.
 
 [NT Header의 Offset]
     NT Header의 시작 위치는 DOS STUB이 끝난 이후이다.
-    DOS STUB의 크기는 고정적이지 않지만 
+    DOS STUB의 크기는 고정적이지 않지만
     DOS Header의 마지막 변수인 LONG 타입의 e_lfanew를 살펴보면
     "File address of new exe header" 를 알수 있다고 한다.
     즉 새로운 형식의 확장헤더의 주소가 저장되어 있는 곳이다.
     우리는 이 곳을 참조하면 NT Header의 시작 위치를 구할 수 있다.
 
-    NT Header 
+    NT Header
 
+    """
+
+    help_INT = """
+    준비중
+    """
+
+    help_IAT = """
+    준비중
+    """
+
+    help_datadirectory_time = """
+    준비중
+    """
+
+    help_ImportDirectory = """
+    준비중
     """
 
 
@@ -279,22 +295,22 @@ Characteristics : {}
 
 def info_OptionalHeader(pe):
     """
-Magic : 32 & 64 bit 표현 
-AddressOfEntryPoint : 프로그램의 시작주소 
-ImageBase + AddressOfEntryPoint = 상대적 시작 주소 
-BaseOfCode : code 영역의 시작 주소 
-BaseOfData : data 영역의 시작 주소 
-SectionAlignment : 메모리 상의 최소 단위 
-FileAlignment : 파일 상의 최소 단위 
-SizeOfImage : PE 파일이 메모리에 load되어 있는 상태의 크기 
-SizeOfHeader : PE 헤더의 전체 크기 
-Subsystem : 1 - Driver, 2 - GUI, 3 - CUI 
-NumberOfRavAndSizes : IMAGE_DATA_DIRECTORY DataDirectory의 배열 길이 
+Magic : 32 & 64 bit 표현
+AddressOfEntryPoint : 프로그램의 시작주소
+ImageBase + AddressOfEntryPoint = 상대적 시작 주소
+BaseOfCode : code 영역의 시작 주소
+BaseOfData : data 영역의 시작 주소
+SectionAlignment : 메모리 상의 최소 단위
+FileAlignment : 파일 상의 최소 단위
+SizeOfImage : PE 파일이 메모리에 load되어 있는 상태의 크기
+SizeOfHeader : PE 헤더의 전체 크기
+Subsystem : 1 - Driver, 2 - GUI, 3 - CUI
+NumberOfRavAndSizes : IMAGE_DATA_DIRECTORY DataDirectory의 배열 길이
 DataDirectory : 각 항목별로 정의된 값이 존재한다.
-#define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
-#define IMAGE_DIRECTORY_ENTRY_IMPORT          1   // Import Directory
-#define IMAGE_DIRECTORY_ENTRY_RESOURCE        2   // Resource Directory
-#define IMAGE_DIRECTORY_ENTRY_TLS             9   // TLS Directory
+# define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
+# define IMAGE_DIRECTORY_ENTRY_IMPORT          1   // Import Directory
+# define IMAGE_DIRECTORY_ENTRY_RESOURCE        2   // Resource Directory
+# define IMAGE_DIRECTORY_ENTRY_TLS             9   // TLS Directory
     """
     if pe.OPTIONAL_HEADER.Magic == 267:
         magic = "32bit"
@@ -309,14 +325,14 @@ DataDirectory : 각 항목별로 정의된 값이 존재한다.
     print("-"*40)
     print("'{}'의 Optional Header 정보입니다.".format(filename))
     print("""
-Magic : {} ({}) 
+Magic : {} ({})
 AddressOfEntryPoint : {}
 ImageBase : {}
 BaseOfCode : {}
 BaseOfData : {}
-SectionAlignment : {} 
-FileAlignment : {} 
-SizeOfImage : {} 
+SectionAlignment : {}
+FileAlignment : {}
+SizeOfImage : {}
 SizeOfHeaders : {}
 Subsystem : {} ({})
 NumberOfRvaAndSizes : {}
@@ -349,26 +365,89 @@ NumberOfRvaAndSizes : {}
     print("-"*40)
     print("0. 초기 메뉴")
     print("1. 이전 메뉴")
-    print("2. Export Directory ")
-    print("2. 도움말 - Optional header")
-    print("3. 도움말 - Data Directory")
+    print("2. Export Directory")
+    print("3. Import Directory")
+    print("4. 도움말 - Optional header")
+    print("5. 도움말 - Data Directory")
     n = input("숫자를 입력해주세요. : ")
     if n == '1':
         basic_Info_NtHeader(pe)
-    elif n == '2':
-        print(information.help_OptioanlHeader)
     elif n == '3':
+        info_ImportDirectory(pe)
+    elif n == '4':
+        print(information.help_OptioanlHeader)
+    elif n == '5':
         print(information.help_DataDirectory)
+
+
+def info_ImportDirectory(pe):
+    print("-"*40)
+    print("""
+{}의 Import Directory 정보입니다.
+이 프로그램이 사용하는 라이브러리 목록입니다.
+    """.format(filename))
+    for i in range(len(pe.DIRECTORY_ENTRY_IMPORT)):
+        print("{}. {}".format(
+            i, pe.DIRECTORY_ENTRY_IMPORT[i].dll.decode('utf-8')))
+    print("")
+    n = int(input("자세히 알아보고 싶은 라이브러리의 번호를 입력해주세요. : "))
+    if n > len(pe.DIRECTORY_ENTRY_IMPORT):
+        print("잘못 입력하셨습니다.")
+        return info_ImportDirectory(pe)
+    t = time.ctime(pe.DIRECTORY_ENTRY_IMPORT[n].struct.TimeDateStamp)
+    print("""
+{}. {}에 대한 상세 정보입니다.
+
+OriginalFirstThunk : {} (INT RVA)
+TimeDateStamp : {}
+Name : {} (Name String이 저장된 곳의 RVA)
+FirstThunk : {} (IAT RVA)
+    """.format(n, pe.DIRECTORY_ENTRY_IMPORT[n].dll.decode('utf-8'), hex(pe.DIRECTORY_ENTRY_IMPORT[n].struct.OriginalFirstThunk),
+               t, hex(pe.DIRECTORY_ENTRY_IMPORT[n].struct.Name), hex(pe.DIRECTORY_ENTRY_IMPORT[n].struct.FirstThunk)))
+    print("IAT에서 가져온 {}에서 {}가 사용하는 함수에 대한 정보입니다.".format(
+        pe.DIRECTORY_ENTRY_IMPORT[n].dll.decode('utf-8'), filename))
+    for i in range(len(pe.DIRECTORY_ENTRY_IMPORT[n].imports)):
+        print("""
+        {}. {}
+        하드코딩 주소 : {}
+        """.format(i, pe.DIRECTORY_ENTRY_IMPORT[n].imports[i].name.decode('utf-8'), hex(pe.DIRECTORY_ENTRY_IMPORT[n].imports[i].bound)))
+    print("-"*40)
+    print("""
+0. 초기메뉴
+1. 이전메뉴
+2. 도움말 : Import Directory 개념
+3. 도움말 : INT 개념
+4. 도움말 : IAT 개념
+5. 도움말 : TimeDateStamp가 FFFFFFFF로 나옵니다.
+    """)
+    num = input("숫자를 입력해주세요. : ")
+    if num == '1':
+        info_OptionalHeader(pe)
+    elif numm = '2':
+        print(information.help_ImportDirectory)
+    elif num == '3':
+        print(information.help_INT)
+    elif num == '4':
+        print(information.help_IAT)
+    elif num == '5':
+        print(information.help_datadirectory_time)
 
 
 def main():
     pe = start_Print()
     menu(pe)
-    print(hex(pe.OPTIONAL_HEADER.AddressOfEntryPoint))  # 267
+    # print(hex(pe.OPTIONAL_HEADER.AddressOfEntryPoint))  # 267
    # print(pe.dump_info())
     # print(pe.OPTIONAL_HEADER.__file_offset__)
     # print()
-    print(pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size)
+    # print(pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size)
+    # print(pe.DIRECTORY_ENTRY_IMPORT[0].DLL)
+    # tmp = pe.DIRECTORY_ENTRY_IMPORT[0].dll
+    # tmp = tmp.decode('utf-8')
+
+    # pe.IMAGE_DIRECTORY_ENTRY_IMPORT[0].DLL
+
+    # print(tmp)
 
 
 if __name__ == '__main__':
