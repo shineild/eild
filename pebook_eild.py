@@ -3,7 +3,7 @@ import pefile
 import time
 __author__ = 'shin.eild'
 __version__ = '0x84.1'
-__contact__ = 'shin.eild71@gmail.com'
+__contact__ = 'eild1@kakao.com'
 
 
 class information:
@@ -100,6 +100,22 @@ Signature 뒤에는 FileHeader와 OptionalHeader 구조체가 존재한다.
     준비중
     """
 
+    help_ExportDirectory = """
+    준비중
+    """
+
+    help_EAT = """
+    준비중
+    """
+
+    help_SectionHeader_Charcteristics = """
+    준비중
+    """
+
+    help_Section_MvsF = """
+    준비중
+    """
+
 
 def start_Print():
     print("-"*40)
@@ -111,12 +127,16 @@ def start_Print():
 안녕하세요. eild의 peviewer입니다.
 현재 사용하시는 버전은 32bit만 분석이 가능하며
 32bit 파일 공부에만 이용해주세요!
+현재 사용하시는 프로그램은 Version 0x84.1로 기본적인 내용만을 다루고 있습니다.
+추후에는 TLS 및 다른 부분들도 추가할 것입니다.
+여러 오류 제보와 건의사항은 Contact에 나온 e-mail로 문의주시면 감사드립니다.
+
+주의! 현재는 조작된 파일의 경우는 옳바르게 가져오지 못할 수도 있습니다.
 
 분석할 파일의 경로를 입력해주세요.
 ex) 'C:\\Window\\system32\\notepad.exe'
     '.\\calc.exe'
     """)
-    # ./calc.exe
     path = input("경로 입력 : ")
     global filename
     if '/' in path:
@@ -130,13 +150,12 @@ ex) 'C:\\Window\\system32\\notepad.exe'
 
 def menu(pe):
     print("-"*40)
-    print("-메뉴-")
-    print("")
+    print("-메뉴-\n")
     print("0. 도움말")
     print("1. Header Offset 확인")
     print("2. NT Header 확인")
-    print("9. 프로그램 종료")
-    print("")
+    print("3. Section Header 확인")
+    print("9. 프로그램 종료\n")
     n = input("숫자를 입력해주세요. : ")
     if n == '0':
         help()
@@ -144,6 +163,8 @@ def menu(pe):
         basic_Info_offset(pe)
     elif n == '2':
         basic_Info_NtHeader(pe)
+    elif n == '3':
+        info_SectionHeader(pe)
     elif n == '9':
         print("프로그램을 종료합니다.\n유익한 시간이 되셨기를 바랍니다.")
         return
@@ -193,10 +214,11 @@ SECTION HEADER Offset   : 0x%03X ~ 0x%X
     """ % (filename, dos_Stub_Offset_End, nt_Header_Offset[0], nt_Header_Offset[1], section_Header_Offset[0], section_Header_Offset[1]))
 
     print("-"*40)
-    print("1. 초기 메뉴")
-    print("2. 도움말 - Offset을 구하는 원리")
+    print("0. 초기 메뉴")
+    print("1. 도움말 - Offset을 구하는 원리")
     n = input("숫자를 입력해주세요. : ")
     if n == '2':
+        print("-"*40)
         print(information.help_offset)
     else:
         print("숫자를 잘못 입력하셨습니다.\n초기 메뉴로 돌아갑니다.")
@@ -227,6 +249,44 @@ Optional Header's Offset : {}
         print(information.help_Nt)
     else:
         print("숫자를 잘못 입력하셨습니다.\n초기 메뉴로 돌아갑니다.")
+
+
+def info_SectionHeader(pe):
+    print("-"*40)
+    print("{}는 총 {}개의 Section Header와 Body가 존재합니다.".format(
+        filename, hex(pe.FILE_HEADER.NumberOfSections)))
+    print("몇번째 Section의 Header 정보를 불러오시겠습니까?\n전체 Header의 정보를 불러오시려면 '0'을 입력해주세요.")
+    n = int(input("숫자를 입력해주세요. : "))
+    if n == 0:
+        for i in range(pe.FILE_HEADER.NumberOfSections):
+            sectionHeader_print(pe, i)
+        return
+    else:
+        sectionHeader_print(pe, n)
+        b = input("계속 보시겠습니까? 'Y' or 'N' : ")
+        if b == 'Y' or 'y':
+            info_SectionHeader(pe)
+        elif b == 'N' or 'n':
+            pass
+        else:
+            print("입력 값 오류!")
+        print("""
+0. 초기메뉴
+1. 도움말 - Section Header
+2. 도움말 - Section Header's Characteristics
+3. 도움말 - 파일과 메모리상에서의 수치가 다른 이유
+4. 도움말 - Section에는 어떠한 값들이 존재합니까?
+        """)
+        n2 = input("숫자를 입력해주세요. : ")
+        print("-"*40)
+        if n2 == '1':
+            print(information.help_SectionHeader)
+        elif n2 == '2':
+            print(information.help_SectionHeader_Charcteristics)
+        elif n2 == '3':
+            print(information.help_Section_MvsF)
+        elif n2 == '4':
+            print(information.help_Section)
 
 
 def info_FileHeader(pe):
@@ -294,24 +354,6 @@ Characteristics : {}
 
 
 def info_OptionalHeader(pe):
-    """
-Magic : 32 & 64 bit 표현
-AddressOfEntryPoint : 프로그램의 시작주소
-ImageBase + AddressOfEntryPoint = 상대적 시작 주소
-BaseOfCode : code 영역의 시작 주소
-BaseOfData : data 영역의 시작 주소
-SectionAlignment : 메모리 상의 최소 단위
-FileAlignment : 파일 상의 최소 단위
-SizeOfImage : PE 파일이 메모리에 load되어 있는 상태의 크기
-SizeOfHeader : PE 헤더의 전체 크기
-Subsystem : 1 - Driver, 2 - GUI, 3 - CUI
-NumberOfRavAndSizes : IMAGE_DATA_DIRECTORY DataDirectory의 배열 길이
-DataDirectory : 각 항목별로 정의된 값이 존재한다.
-# define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
-# define IMAGE_DIRECTORY_ENTRY_IMPORT          1   // Import Directory
-# define IMAGE_DIRECTORY_ENTRY_RESOURCE        2   // Resource Directory
-# define IMAGE_DIRECTORY_ENTRY_TLS             9   // TLS Directory
-    """
     if pe.OPTIONAL_HEADER.Magic == 267:
         magic = "32bit"
     else:
@@ -372,6 +414,8 @@ NumberOfRvaAndSizes : {}
     n = input("숫자를 입력해주세요. : ")
     if n == '1':
         basic_Info_NtHeader(pe)
+    elif n == '2':
+        info_ExportDirectory(pe)
     elif n == '3':
         info_ImportDirectory(pe)
     elif n == '4':
@@ -423,7 +467,7 @@ FirstThunk : {} (IAT RVA)
     num = input("숫자를 입력해주세요. : ")
     if num == '1':
         info_OptionalHeader(pe)
-    elif numm = '2':
+    elif num == '2':
         print(information.help_ImportDirectory)
     elif num == '3':
         print(information.help_INT)
@@ -433,21 +477,195 @@ FirstThunk : {} (IAT RVA)
         print(information.help_datadirectory_time)
 
 
+def info_ExportDirectory(pe):
+    print("-"*40)
+    if pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size == 0:
+        print("{}은 Export Directory가 존재하지 않습니다.".format(filename))
+        return
+    print("""
+{}의 Export Directory 정보입니다.
+
+NumberOfFunctions : {} (실제 Export 함수 개수)
+NumberOfNames : {} (이름이 있는 함수의 개수)
+AddressOfFunctions : {} (Export 함수 주소 배열)
+AddressOfNames : {} (함수 이름 주소 배열)
+AddressOfNameOrdinals : {} (배열의 원소 개수)
+    """.format(filename, hex(pe.DIRECTORY_ENTRY_EXPORT.struct.NumberOfFunctions),
+               hex(pe.DIRECTORY_ENTRY_EXPORT.struct.NumberOfNames), hex(
+                   pe.DIRECTORY_ENTRY_EXPORT.struct.AddressOfFunctions),
+               hex(pe.DIRECTORY_ENTRY_EXPORT.struct.AddressOfNames), hex(pe.DIRECTORY_ENTRY_EXPORT.struct.AddressOfNameOrdinals)))
+
+    b = input("함수 목록을 확인하시겠습니까? (Y or N) : ")
+    if b == 'Y' or b == 'y':
+        print("([주소 offset]) (ordinal). (함수 이름) : (RVA)")
+        eatList(pe)
+        print("-"*40)
+        print("""
+[메뉴]
+0. 초기메뉴
+1. 이전 메뉴
+2. 도움말 - Export Directory
+3. 도움말 - Export Address Table (EAT)
+        """)
+        n = input("숫자를 입력해주세요. : ")
+        if n == '1':
+            info_OptionalHeader(pe)
+        elif n == '2':
+            print("-"*40)
+            print(information.help_ExportDirectory)
+        elif n == '3':
+            print("-"*40)
+            print(information.help_EAT)
+
+
+def eatList(pe):
+    for i in range(len(pe.DIRECTORY_ENTRY_EXPORT.symbols)):
+        if i % 10 == 0 and i > 9:
+            print("""
+[N : 목록 이어서 보기]
+[S : 그만 보고 나가기]
+[A : 나머지 모두 출력]
+            """)
+            b = input(": ")
+            if b == 'N' or b == 'n':
+                print("-"*40)
+            elif b == 'S' or b == 's':
+                break
+            elif b == 'A' or b == 'a':
+                for k in range(i, len(pe.DIRECTORY_ENTRY_EXPORT.symbols)):
+                    print("[{}] {}. {} : {}".format(hex(pe.DIRECTORY_ENTRY_EXPORT.symbols[k].address_offset),
+                                                    k+1,
+                                                    pe.DIRECTORY_ENTRY_EXPORT.symbols[k].name.decode(
+                        'utf-8'),
+                        hex(pe.DIRECTORY_ENTRY_EXPORT.symbols[k].address)))
+                break
+
+            else:
+                print("입력 오류! 다음 목록을 출력하겠습니다.")
+                print("-"*40)
+        print("[{}] {}. {} : {}".format(hex(pe.DIRECTORY_ENTRY_EXPORT.symbols[i].address_offset),
+                                        i+1, pe.DIRECTORY_ENTRY_EXPORT.symbols[i].name.decode(
+            'utf-8'),
+            hex(pe.DIRECTORY_ENTRY_EXPORT.symbols[i].address)))
+
+
+def sectionHeader_print(pe, n):
+    print("-"*40)
+    characteristics = section_Charaveristics(pe.section[n])
+    print("""
+Section Header \"{}\"의  정보입니다.
+
+VirtualSize : {} (메모리에서 해당섹션이 차지하는 크기)
+VirtualAddress : {} (RVA)
+SizeOfRawData : {}  (파일에서 해당섹션이 차지하는 크기)
+PointerToRawData : {} (파일에서 해당섹션의 시작 위치)
+[Characteristics]
+    """.format(pe.sections[n].Name.decode('utf-8'), hex(pe.sections[n].Misc_VirtualSize),
+               hex(pe.sections[n].VirtualAddress), hex(
+                   pe.sections[n].SizeOfRawData),
+               hex(pe.sections[n].PointerToRawData)))
+    for i in range(len(characteristics)):
+        print("\t{} : True".format(characteristics[i]))
+
+
+def section_Charaveristics(section):
+    characteristics = []
+    if section.IMAGE_SCN_ALIGN_1024BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_1024BYTES")
+    if section.IMAGE_SCN_ALIGN_128BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_128BYTES")
+    if section.IMAGE_SCN_ALIGN_16BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_16BYTES")
+    if section.IMAGE_SCN_ALIGN_1BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_1BYTES")
+    if section.IMAGE_SCN_ALIGN_2048BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_2048BYTES")
+    if section.IMAGE_SCN_ALIGN_256BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_256BYTES")
+    if section.IMAGE_SCN_ALIGN_2BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_2BYTES")
+    if section.IMAGE_SCN_ALIGN_32BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_32BYTES")
+    if section.IMAGE_SCN_ALIGN_4096BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_4096BYTES")
+    if section.IMAGE_SCN_ALIGN_4BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_4BYTES")
+    if section.IMAGE_SCN_ALIGN_512BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_512BYTES")
+    if section.IMAGE_SCN_ALIGN_64BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_64BYTES")
+    if section.IMAGE_SCN_ALIGN_8192BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_8192BYTES")
+    if section.IMAGE_SCN_ALIGN_8BYTES == True:
+        characteristics.append("IMAGE_SCN_ALIGN_8BYTES")
+    if section.IMAGE_SCN_ALIGN_MASK == True:
+        characteristics.append("MAGE_SCN_ALIGN_MASK")
+    if section.IMAGE_SCN_CNT_CODE == True:
+        characteristics.append("IMAGE_SCN_CNT_CODE")
+    if section.IMAGE_SCN_CNT_INITIALIZED_DATA == True:
+        characteristics.append("IMAGE_SCN_CNT_INITIALIZED_DATA")
+    if section.IMAGE_SCN_CNT_UNINITIALIZED_DATA == True:
+        characteristics.append("IMAGE_SCN_CNT_UNINITIALIZED_DATA")
+    if section.IMAGE_SCN_GPREL == True:
+        characteristics.append("IMAGE_SCN_GPREL")
+    if section.IMAGE_SCN_LNK_COMDAT == True:
+        characteristics.append("IMAGE_SCN_LNK_COMDAT")
+    if section.IMAGE_SCN_LNK_INFO == True:
+        characteristics.append("IMAGE_SCN_LNK_INFO")
+    if section.IMAGE_SCN_LNK_NRELOC_OVFL == True:
+        characteristics.append("IMAGE_SCN_LNK_NRELOC_OVFL")
+    if section.IMAGE_SCN_LNK_OTHER == True:
+        characteristics.append("IMAGE_SCN_LNK_OTHER")
+    if section.IMAGE_SCN_LNK_OVER == True:
+        characteristics.append("IMAGE_SCN_LNK_OVER")
+    if section.IMAGE_SCN_LNK_REMOVE == True:
+        characteristics.append("IMAGE_SCN_LNK_REMOVE")
+    if section.IMAGE_SCN_MEM_16BIT == True:
+        characteristics.append("IMAGE_SCN_MEM_16BIT")
+    if section.IMAGE_SCN_MEM_DISCARDABLE == True:
+        characteristics.append("IMAGE_SCN_MEM_DISCARDABLE")
+    if section.IMAGE_SCN_MEM_EXECUTE == True:
+        characteristics.append("IMAGE_SCN_MEM_EXECUTE")
+    if section.IMAGE_SCN_MEM_FARDATA == True:
+        characteristics.append("IMAGE_SCN_MEM_FARDATA")
+    if section.IMAGE_SCN_MEM_LOCKED == True:
+        characteristics.append("IMAGE_SCN_MEM_LOCKED")
+    if section.IMAGE_SCN_MEM_NOT_CACHED == True:
+        characteristics.append("IMAGE_SCN_MEM_NOT_CACHED")
+    if section.IMAGE_SCN_MEM_NOT_PAGED == True:
+        characteristics.append("IMAGE_SCN_MEM_NOT_PAGED")
+    if section.IMAGE_SCN_MEM_PRELOAD == True:
+        characteristics.append("IMAGE_SCN_MEM_PRELOAD")
+    if section.IMAGE_SCN_MEM_PURGEABLE == True:
+        characteristics.append("IMAGE_SCN_MEM_PURGEABLE")
+    if section.IMAGE_SCN_MEM_READ == True:
+        characteristics.append("IMAGE_SCN_MEM_READ")
+    if section.IMAGE_SCN_MEM_SHARED == True:
+        characteristics.append("IMAGE_SCN_MEM_SHARED")
+    if section.IMAGE_SCN_MEM_SYSHEAP == True:
+        characteristics.append("IMAGE_SCN_MEM_SYSHEAP")
+    if section.IMAGE_SCN_MEM_WRITE == True:
+        characteristics.append("IMAGE_SCN_MEM_WRITE")
+    if section.IMAGE_SCN_NO_DEFER_SPEC_EXE == True:
+        characteristics.append("IMAGE_SCN_NO_DEFER_SPEC_EXE")
+    if section.IMAGE_SCN_TYPE_COPY == True:
+        characteristics.append("IMAGE_SCN_TYPE_COPY")
+    if section.IMAGE_SCN_TYPE_DSECT == True:
+        characteristics.append("IMAGE_SCN_TYPE_DSECT")
+    if section.IMAGE_SCN_TYPE_GROUP == True:
+        characteristics.append("IMAGE_SCN_TYPE_GROUP")
+    if section.IMAGE_SCN_TYPE_NOLOAD == True:
+        characteristics.append("IMAGE_SCN_TYPE_NOLOAD")
+    if section.IMAGE_SCN_TYPE_NO_PAD == True:
+        characteristics.append("IMAGE_SCN_TYPE_NO_PAD")
+    if section.IMAGE_SCN_TYPE_REG == True:
+        characteristics.append("IMAGE_SCN_TYPE_REG")
+    return characteristics
+
+
 def main():
     pe = start_Print()
     menu(pe)
-    # print(hex(pe.OPTIONAL_HEADER.AddressOfEntryPoint))  # 267
-   # print(pe.dump_info())
-    # print(pe.OPTIONAL_HEADER.__file_offset__)
-    # print()
-    # print(pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size)
-    # print(pe.DIRECTORY_ENTRY_IMPORT[0].DLL)
-    # tmp = pe.DIRECTORY_ENTRY_IMPORT[0].dll
-    # tmp = tmp.decode('utf-8')
-
-    # pe.IMAGE_DIRECTORY_ENTRY_IMPORT[0].DLL
-
-    # print(tmp)
 
 
 if __name__ == '__main__':
