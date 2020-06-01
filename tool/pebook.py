@@ -5,7 +5,7 @@ __author__ = 'shin.eild'
 __version__ = '0x84.1'
 __contact__ = 'eild1@kakao.com'
 
-
+# 도움말들을 클래스로 정리하여 모아두었습니다.
 class information:
     help_Pe = """
 PE (Portable Excutable)
@@ -589,7 +589,7 @@ PointerToRawData와 VA(Virtual Address)는 Section Header에 정보가 들어 �
 해당 RVA 값이 속해 있는 Section의 Header에 정보가 들어 있다.
     """
 
-
+# 프로그램 실행시 가자 처음 시작 되는 함수입니다.
 def start_Print():
     print("-"*40)
     print("Author   :", __author__)
@@ -611,6 +611,8 @@ ex) 'C:\\Window\\system32\\notepad.exe'
     '.\\calc.exe'
     """)
     path = input("경로 입력 : ")
+    
+    # 파일 이름을 가져오는 과정입니다.
     global filename
     if '/' in path:
         tmp = path.split('/')
@@ -647,6 +649,7 @@ def menu(pe):
     return menu(pe)
 
 
+# 도움말만 따로 모아둔 메뉴입니다.
 def help():
     print("-"*40)
     print("도움말 페이지입니다.")
@@ -734,6 +737,8 @@ def help():
     return help()
 
 
+
+# 기본적인 header의 offset 위치를 알려줍니다.
 def basic_Info_offset(pe):
 
     dos_Stub_Offset_End = pe.NT_HEADERS.__file_offset__ - 1
@@ -762,6 +767,7 @@ SECTION HEADER Offset   : 0x%03X ~ 0x%X
         print("숫자를 잘못 입력하셨습니다.\n초기 메뉴로 돌아갑니다.")
 
 
+# NtHeader의 기본적인 정보를 출력해줍니다.
 def basic_Info_NtHeader(pe):
     signature = hex(pe.NT_HEADERS.Signature)
 
@@ -789,6 +795,8 @@ Optional Header's Offset : {}
         print("숫자를 잘못 입력하셨습니다.\n초기 메뉴로 돌아갑니다.")
 
 
+        
+# Section Header 정보를 출력해줍니다.
 def info_SectionHeader(pe):
     print("-"*40)
     print("{}는 총 {}개의 Section Header와 Body가 존재합니다.".format(
@@ -821,6 +829,7 @@ def info_SectionHeader(pe):
             print(information.help_Section)
 
 
+# File Header 정보를 출력해줍니다.
 def info_FileHeader(pe):
     machine = ''
     if pe.FILE_HEADER.Machine == 332:
@@ -829,6 +838,8 @@ def info_FileHeader(pe):
         machine = 'It is not intel 386!'
     t = time.ctime(pe.FILE_HEADER.TimeDateStamp)
     c = {}
+    
+    #File Header의 Characteristics 값을 가져오는 과정입니다.
     if pe.FILE_HEADER.IMAGE_FILE_RELOCS_STRIPPED == True:
         c["IMAGE_FILE_RELOCS_STRIPPED"] = "Relocation info stripped from file."
     if pe.FILE_HEADER.IMAGE_FILE_EXECUTABLE_IMAGE == True:
@@ -885,6 +896,7 @@ Characteristics : {}
         print(information.hlep_FileHeader)
 
 
+# Optional Header 정보를 출력해줍니다.
 def info_OptionalHeader(pe):
     if pe.OPTIONAL_HEADER.Magic == 267:
         magic = "32bit"
@@ -956,6 +968,7 @@ NumberOfRvaAndSizes : {}
         print(information.help_DataDirectory)
 
 
+# Import Directory 정보를 출력해줍니다.        
 def info_ImportDirectory(pe):
     print("-"*40)
     print("""
@@ -1005,7 +1018,7 @@ FirstThunk : {} (IAT RVA)
     elif num == '4':
         print(information.help_IAT)
 
-
+# Export Directory의 대한 정보를 출력합니다.
 def info_ExportDirectory(pe):
     print("-"*40)
     if pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size == 0:
@@ -1046,7 +1059,8 @@ AddressOfNameOrdinals : {} (배열의 원소 개수)
             print("-"*40)
             print(information.help_EAT)
 
-
+            
+# EAT 항목이 많기에 나눠서 출력하도로 만들었습니다.
 def eatList(pe):
     for i in range(len(pe.DIRECTORY_ENTRY_EXPORT.symbols)):
         if i % 10 == 0 and i > 9:
@@ -1080,7 +1094,7 @@ def eatList(pe):
 
 def sectionHeader_print(pe, n):
     print("-"*40)
-    characteristics = section_Charaveristics(pe.section[n])
+    characteristics = section_Characteristics(pe.section[n])
     print("""
 Section Header \"{}\"의  정보입니다.
 
@@ -1097,7 +1111,8 @@ PointerToRawData : {} (파일에서 해당섹션의 시작 위치)
         print("\t{} : True".format(characteristics[i]))
 
 
-def section_Charaveristics(section):
+# Section Header의 characteristics 정보를 가져오는 과정입니다.
+def section_Characteristics(section):
     characteristics = []
     if section.IMAGE_SCN_ALIGN_1024BYTES == True:
         characteristics.append("IMAGE_SCN_ALIGN_1024BYTES")
@@ -1208,6 +1223,7 @@ def section_Charaveristics(section):
 
 
 def main():
+    # start_Print()로 file 입력을 받아 pe 값을 가져옵니다.
     pe = start_Print()
     menu(pe)
 
