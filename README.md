@@ -46,5 +46,3 @@ Created: 2020년 11월 3일 오후 10:33
 https://tenor.com/view/dancing-excited-dance-dance-move-smile-gif-16099354
 
 <img width="385" alt="스크린샷 2020-10-31 오전 9 33 16" src="https://tenor.com/view/dancing-excited-dance-dance-move-smile-gif-16099354">
-">
-
