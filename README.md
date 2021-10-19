@@ -4,4 +4,4 @@
 
 ## 개인 공부하면서 저장한 정돈되지 않은 코드입니다.
 - NonSec
-- cloncoding
+- kakao-clone
