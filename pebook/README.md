@@ -10,9 +10,7 @@
 
 File Header 정보 출력 후 "도움말 - File header"로 들어온 화면입니다.
 
-S**ource Code**
 
-[shineild/eild](https://github.com/shineild/eild/blob/master/tool/pebook.py)
 
 **블로그에 적은 개발 과정**
 
