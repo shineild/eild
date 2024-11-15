@@ -37,7 +37,7 @@ def run_as_admin():
         sys.stderr = open(os.devnull, "w")
 
     cnt = 0
-    url = "https://drive.google.com/uc?id=1WSSvB3lF3f15serxeQ5WS6d00v8U-ocY"
+    url = "https://drive.google.com/uc?id=1YYg_ey-X0h-rsnGonpzOOQrl8haF7YnH"
     output = 'odin_map.exe'
     
     # 1. 파일 다운로드
