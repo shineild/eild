@@ -1,3 +1,13 @@
+import subprocess
+import sys
+
+package_name = "pynput"
+try:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
+    print(f"'{package_name}' 패키지가 성공적으로 설치되었습니다.")
+except subprocess.CalledProcessError as e:
+    print(f"패키지 설치 실패: {e}")
+    
 import os
 import requests
 import time
